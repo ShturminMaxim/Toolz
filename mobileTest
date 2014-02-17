@@ -75,7 +75,7 @@ var mobileObj = (function() {
         that.currDeviceHeight = document.documentElement.clientHeight;
     }
     function changeOrientationState() {
-        if (that.platform.type === 'mobile') {
+        if (that.platform.type === 'mobile' || that.platform.type === 'tablet') {
           switch (window.orientation) {
             case -90:
             case 90:

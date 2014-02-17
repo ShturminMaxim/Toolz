@@ -1,0 +1,99 @@
+var mobileObj = (function() {
+    var that = {};
+    that.orientation = '';
+    that.currDeviceWidth = 0;
+    that.currDeviceHeight = 0;
+    onChangeCallbacks = [];
+    that.platform = (function detectPlatform(userAgent) {
+        var type = '',
+          platform = '',
+          result = null,
+          mobile = /iphone|ipod|ipad|android|windows phone|silk|blackberry|symbian|mobile|rim tablet os|BB10/,
+          pc = /windows|mac|linux/,
+          platformInfo = {};
+
+        userAgent = (userAgent || navigator.userAgent).toLowerCase();
+
+        result = mobile.exec(userAgent);
+        if (result) {
+          if (userAgent.indexOf('silk') >= 0) {
+            // Silk
+            type = 'tablet';
+            platform = 'android';
+          } else {
+            if ((userAgent.indexOf('android') >= 0 && userAgent.indexOf('mobile') < 0) ||
+              (userAgent.indexOf('ipad') >= 0) || (userAgent.indexOf('rim tablet os') >= 0)) {
+              // Android, BlackBerry tablet, iPad
+              type = 'tablet';
+            } else {
+              // Android phone, iPhone, iPod, Windows Phone, BlackBerry, Symbian
+              type = 'mobile';
+            }
+            platform = result[0].replace(' ', '');
+          }
+        } else {
+          result = pc.exec(userAgent);
+          if (result) {
+            // Desktop platforms.
+            type = 'pc';
+            platform = result[0];
+          } else {
+            // Unknown platforms.
+            type = 'unknown';
+            platform = 'unknown';
+          }
+        }
+
+        // Set properties.
+        platformInfo.type = type;
+        platformInfo.original = platform;
+        platformInfo[type] = true;
+        platformInfo[platform] = true;
+
+        return platformInfo;
+    }());
+    that.addOnChangeCallback = function(f) {
+        if(typeof f === 'function') {
+            onChangeCallbacks.push(f);
+        }
+    };
+    
+    function init() {
+        updateSize();
+        changeOrientationState();
+    }
+
+    function doCallbacks() {
+        var length = onChangeCallbacks.length;
+        for (var i = 0; i < length; i++) {
+            onChangeCallbacks[i](that);
+        }
+    }
+
+    function updateSize() {
+        that.currDeviceWidth = document.documentElement.clientWidth;
+        that.currDeviceHeight = document.documentElement.clientHeight;
+    }
+    function changeOrientationState() {
+        if (that.platform.type === 'mobile') {
+          switch (window.orientation) {
+            case -90:
+            case 90:
+                that.orientation = 'landscape';
+                // landscape
+              break;
+            default:
+                that.orientation = 'portrait';
+                // portrait
+              break;
+          }
+          updateSize();
+          doCallbacks();
+        }
+    }
+
+    window.addEventListener('orientationchange', changeOrientationState);
+
+    init();
+    return that;
+}());
